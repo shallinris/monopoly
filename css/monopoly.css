@@ -53,7 +53,9 @@ body{
 
 .board .game.cell.go-to-jail{
     background-image: url(../images/gotojail.png);
+    /*either add sad face here?*/
 }
+
 
 .board .game.cell.in-jail{
     background-image: url(../images/jail.jpg);
@@ -204,6 +206,19 @@ body{
     background-size:contain;
     background-position:center;
 }
+/*add sad face when owner in jail*/
+.player.jailed {
+    background-image: url("http://findicons.com/files/icons/2172/lin/128/3.png");
+    background-size:contain;
+    background-position:center;
+    /*this doesnt work*/
+}
+.current-turn.property-owner {
+    background-image: url("https://cdn2.iconfinder.com/data/icons/lin/128/1.png");
+    background-size:contain;
+    background-position:center;
+
+}
 
 .board .dice.cell{
     background-color:white;
@@ -214,7 +229,7 @@ body{
     width: 25%;
     height: 25%;
     margin: 4%;
-    background-color: black;
+    background-color: #364c9c;
     border-radius: 100px;
     opacity:0;
 }
@@ -222,3 +237,5 @@ body{
 .dice-dot.right{
     margin-left:36%;
 }
+
+/*added this but not sure i need it*/
