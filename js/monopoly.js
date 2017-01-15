@@ -9,7 +9,7 @@ Monopoly.init = function(){
         $(window).bind("resize",Monopoly.adjustBoardSize);
         Monopoly.initDice();
         Monopoly.initPopups();
-        Monopoly.start();        
+        Monopoly.start();
     });
 };
 
@@ -41,23 +41,27 @@ Monopoly.getPlayersMoney = function(player){
     return parseInt(player.attr("data-money"));
 };
 
-//updates the amount of money player has and if player is broke removes player
+//updates the amount of money player has and if player is broke removes player-still a bug here
 Monopoly.updatePlayersMoney = function(player,amount){
     var playersMoney = parseInt(player.attr("data-money")); //data-money just represents amount of money throughout
     playersMoney -= amount;
     if (playersMoney <= 0 ){
+        Monopoly.getCurrentPlayer
         Monopoly.showPopup("broke");
         player.removeAttr("data-money");
         player.removeClass("player");
         player.removeAttr("title",player.attr("id") + ": $" + playersMoney);
+
         // //removed properties and player from game
+        Monopoly.setNextPlayerTurn();
+
     }
     player.attr("data-money",playersMoney);
     player.attr("title",player.attr("id") + ": $" + playersMoney);
     Monopoly.playSound("chaching");
 };
 
-//roll dice function and if player rolls a double he/she can go again
+//generates dice and includes double counter
 Monopoly.rollDice = function(){
     var result1 = Math.floor(Math.random() * 6) + 1 ;
     var result2 = Math.floor(Math.random() * 6) + 1 ;
@@ -91,7 +95,7 @@ Monopoly.movePlayer = function(player,steps){
     },200);
 };
 
-//handles what happens when players land on different cells-calls appropriate function
+//handles turn depending on player's position. then sets next player turn
 Monopoly.handleTurn = function(){
     var player = Monopoly.getCurrentPlayer();
     var playerCell = Monopoly.getPlayersCell(player);
@@ -117,7 +121,7 @@ Monopoly.handleTurn = function(){
 
 }
 
-//sets next players turn. if player rolls double they go again else gets the next player by checking id. if next player is jailed they skip 3 turns
+//sets next players turn. if player rolls double they go again. if player is jailed they skip 3 turns
 Monopoly.setNextPlayerTurn = function(){
     if (Monopoly.doubleCounter == 1) {
         Monopoly.allowRoll = true;
@@ -127,7 +131,7 @@ Monopoly.setNextPlayerTurn = function(){
         var currentPlayerTurn = Monopoly.getCurrentPlayer();
         var playerId = parseInt(currentPlayerTurn.attr("id").replace("player",""));
         var nextPlayerId = playerId + 1;
-        if (nextPlayerId > $(".player").length){
+        if (nextPlayerId > $(".player").length){ //cycles through all players and if more than amount of players goes back to player one
             nextPlayerId = 1;
         }
 
@@ -152,7 +156,7 @@ Monopoly.setNextPlayerTurn = function(){
 
 };
 
-//if player wants to buy property they are on calls handleBuy function. else closes popup and next player has turn
+//handles if player wants to buy property they are on. if they dont have enough money they get an error message. once they buy or dont buy popup closes
 Monopoly.handleBuyProperty = function(player,propertyCell){
     var propertyCost = Monopoly.calculateProperyCost(propertyCell);
     var popup = Monopoly.getPopup("buy");
@@ -167,10 +171,10 @@ Monopoly.handleBuyProperty = function(player,propertyCell){
     });
     Monopoly.showPopup("buy");
 
-    
+
 };
 
-//if current player lands on another players property they must pay rent. updates their money
+//if current player lands on another players property they must pay rent. updates players' money
 Monopoly.handlePayRent = function(player,propertyCell){
     var popup = Monopoly.getPopup("pay");
     var currentRent = parseInt(propertyCell.attr("data-rent"));
@@ -179,7 +183,6 @@ Monopoly.handlePayRent = function(player,propertyCell){
     popup.find("#amount-placeholder").text(currentRent);
     popup.find("button").unbind("click").bind("click",function(){
         var properyOwner = $(".player#"+ properyOwnerId);
-        console.log(properyOwnerId)
         Monopoly.updatePlayersMoney(player,currentRent);
         Monopoly.updatePlayersMoney(properyOwner,-1*currentRent);
         Monopoly.closeAndNextTurn();
@@ -187,7 +190,7 @@ Monopoly.handlePayRent = function(player,propertyCell){
    Monopoly.showPopup("pay");
 };
 
-//this function has a popup telling the player to go to jail-then it calls the handleAction function
+//go to jail popup appears. then function handles action of player going to jail
 Monopoly.handleGoToJail = function(player){
     var popup = Monopoly.getPopup("jail");
     popup.find("button").unbind("click").bind("click",function(){
@@ -210,7 +213,6 @@ Monopoly.handleChanceCard = function(player){
         var currentBtn = $(this);
         var action = currentBtn.attr("data-action");
         var amount = currentBtn.attr("data-amount");
-        console.log("testing the action and amount " + action + " " + amount)
         Monopoly.handleAction(player,action,amount);
     });
     Monopoly.showPopup("chance");
@@ -237,7 +239,7 @@ Monopoly.handleCommunityCard = function(player){
     Monopoly.showPopup("community");
     }
 
-
+//sends player to jail (corner cell), makes appropriate sound and then closes popup and sets next player turn
 Monopoly.sendToJail = function(player){
     player.addClass("jailed");
     player.attr("data-jail-time",1);
@@ -247,7 +249,7 @@ Monopoly.sendToJail = function(player){
     Monopoly.closePopup();
 };
 
-
+//gets appropriate popup
 Monopoly.getPopup = function(popupId){
     return $(".popup-lightbox .popup-page#" + popupId);
 };
@@ -267,12 +269,13 @@ Monopoly.calculateProperyRent = function(propertyCost){
     return propertyCost/2;
 };
 
-//used for when there is popup and player clicks and then it closes and sets next turn via called function
+//closes popup and sets next player turn
 Monopoly.closeAndNextTurn = function(){
     Monopoly.setNextPlayerTurn();
     Monopoly.closePopup();
 };
 
+//popup for start of game. calls isValidInput function to see whether num of players is valid. then creates players and closes popup
 Monopoly.initPopups = function(){
     $(".popup-page#intro").find("button").click(function(){
         var numOfPlayers = $(this).closest(".popup-page").find("input").val();
@@ -283,7 +286,7 @@ Monopoly.initPopups = function(){
     });
 };
 
-//handles when a player buys property. if they are broke an error message shows up. also removes available class from a bought property and adds data-owner and data-rent attr
+//handles when a player buys property. if they can't afford property an error shows up.
 Monopoly.handleBuy = function(player,propertyCell,propertyCost){
     var playersMoney = Monopoly.getPlayersMoney(player)
     if (playersMoney < propertyCost){
@@ -350,6 +353,8 @@ Monopoly.getNextCell = function(cell){
 
 //adds money at start divided by 10 every time current player passes go
 Monopoly.handlePassedGo = function(){
+    // var player = Monopoly.getCurrentPlayer();
+    // Monopoly.updatePlayersMoney(player, +200);
     var player = Monopoly.getCurrentPlayer();
     var playersMoney = parseInt(player.attr("data-money"));
     console.log(parseInt(player.attr("data-money")));
@@ -357,7 +362,7 @@ Monopoly.handlePassedGo = function(){
     console.log(playersMoney);
 };
 
-
+//checks whether amount of players entered at the beginning is valid
 Monopoly.isValidInput = function(validate,value){
     var isValid = false;
     switch(validate){
@@ -380,6 +385,7 @@ Monopoly.isValidInput = function(validate,value){
 
 }
 
+//error message if input is not valid
 Monopoly.showErrorMsg = function(){
     $(".invalid-error").fadeTo(500,1);
     setTimeout(function(){
@@ -387,7 +393,7 @@ Monopoly.showErrorMsg = function(){
     },3000);
 };
 
-
+//makes board dynamic
 Monopoly.adjustBoardSize = function(){
     var gameBoard = $(".board");
     var boardSize = Math.min($(window).height(),$(window).width());
@@ -400,7 +406,7 @@ Monopoly.closePopup = function(){
 };
 
 Monopoly.playSound = function(sound){
-    var snd = new Audio("./sounds/" + sound + ".wav"); 
+    var snd = new Audio("./sounds/" + sound + ".wav");
     snd.play();
 }
 
